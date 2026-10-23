@@ -1,11 +1,11 @@
-import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { AuthRequest } from '../middleware/auth.middleware';
+import {Response} from 'express';
+import {PrismaClient} from '@prisma/client';
+import {AuthRequest} from '../middleware/auth.middleware';
 
 const prisma = new PrismaClient();
 
 export class TeacherController {
-  async getAll(req: AuthRequest, res: Response) {
+  async getAll(res: Response) {
     try {
       const teachers = await prisma.teacher.findMany({
         orderBy: {

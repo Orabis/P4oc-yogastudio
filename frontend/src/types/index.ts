@@ -8,13 +8,9 @@ export interface User {
   updatedAt?: string;
 }
 
-export interface Teacher {
-  id: number;
-  firstName: string;
-  lastName: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+export type LoginCredentials = Pick<User, "email"> & { password: string }
+export type RegisterData = Pick<User, "email" | "firstName" | "lastName"> & { password: string }
+export type Teacher = Omit<User, "admin" | "email">
 
 export interface Session {
   id: number;
@@ -27,6 +23,8 @@ export interface Session {
   updatedAt?: string;
 }
 
+export type SessionFormData = Pick<Session, "name" | "date" | "description"> & { teacherId: number }
+
 export interface AuthResponse {
   id: number;
   email: string;
@@ -34,23 +32,4 @@ export interface AuthResponse {
   lastName: string;
   admin: boolean;
   token: string;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-}
-
-export interface SessionFormData {
-  name: string;
-  date: string;
-  description: string;
-  teacherId: number;
 }

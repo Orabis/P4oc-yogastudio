@@ -1,19 +1,15 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import {useState} from 'react';
+import {Link} from 'react-router-dom';
 import api from '../services/api';
-import { authService } from '../services/auth.service';
-import { Session } from '../types';
+import {authService} from '../services/auth.service';
+import {AuthResponse, Session} from '../types';
 
 function Sessions() {
-  const [sessions, setSessions] = useState<any>([]);
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>('');
-  const user = authService.getCurrentUser();
-  const token = authService.getToken();
-
-  useEffect(() => {
-    fetchSessions();
-  }, []);
+  const [sessions, setSessions] = useState<object>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+  const user: AuthResponse | null = authService.getCurrentUser();
+  const token: string | null = authService.getToken();
 
   const fetchSessions = async (): Promise<any> => {
     try {

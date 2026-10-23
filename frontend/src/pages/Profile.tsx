@@ -1,62 +1,43 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import api from '../services/api';
-import { authService } from '../services/auth.service';
+import {authService} from '../services/auth.service';
+import {useFetchUserInfo} from "../hooks/useUsers.ts";
+import {useQueryClient} from "@tanstack/react-query";
+import InfoField from "../components/InfoField.tsx";
+
 
 function Profile() {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState<any>(null);
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>('');
-  const [promoteLoading, setPromoteLoading] = useState<any>(false);
-  const [promoteError, setPromoteError] = useState<any>('');
+  const queryClient = useQueryClient();
+
+  const [promoteLoading, setPromoteLoading] = useState<boolean>(false);
+  const [promoteError, setPromoteError] = useState<string>('');
   const user = authService.getCurrentUser();
   const token = authService.getToken();
-  const isDev = (import.meta as any).env?.DEV === true;
+  const isDev = import.meta.env?.DEV;
 
-  useEffect(() => {
-    if (user) {
-      fetchUserInfo();
-    }
-  }, []);
+  const { data: userInfo, isLoading, isError, error } = useFetchUserInfo(user, token)
 
-  const fetchUserInfo = async (): Promise<any> => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/user/${user.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setUserInfo(response.data);
-    } catch (err: any) {
-      setError('Failed to load user information');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteAccount = async (): Promise<any> => {
+  const handleDeleteAccount = async ()=> {
     if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       return;
     }
-
     try {
-      await api.delete(`/user/${user.id}`, {
+      await api.delete(`/user/${user?.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       authService.logout();
       navigate('/login');
-    } catch (err: any) {
+    } catch (err) {
       alert('Failed to delete account');
       console.error(err);
     }
   };
 
-  const handlePromoteAdmin = async (): Promise<any> => {
+  const handlePromoteAdmin = async () => {
     try {
       setPromoteError('');
       setPromoteLoading(true);
@@ -69,9 +50,9 @@ function Profile() {
           },
         },
       );
-      setUserInfo(response.data);
+      queryClient.setQueryData(["fetchusers", user?.id], response.data)
       authService.updateCurrentUser({ admin: response.data.admin });
-    } catch (err: any) {
+    } catch (err) {
       setPromoteError('Failed to promote to admin');
       console.error(err);
     } finally {
@@ -79,7 +60,7 @@ function Profile() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-xl text-gray-600">Loading profile...</div>
@@ -87,11 +68,11 @@ function Profile() {
     );
   }
 
-  if (error || !userInfo) {
+  if (isError || !userInfo) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error || 'Failed to load profile'}
+          {error + 'Failed to load profile'}
         </div>
       </div>
     );
@@ -104,27 +85,9 @@ function Profile() {
           <h1 className="text-3xl font-bold text-gray-800 mb-8">My Profile</h1>
 
           <div className="space-y-4 mb-8">
-            <div className="border-b pb-4">
-              <label className="block text-gray-600 text-sm font-semibold mb-1">
-                First Name
-              </label>
-              <p className="text-lg text-gray-800">{userInfo.firstName}</p>
-            </div>
-
-            <div className="border-b pb-4">
-              <label className="block text-gray-600 text-sm font-semibold mb-1">
-                Last Name
-              </label>
-              <p className="text-lg text-gray-800">{userInfo.lastName}</p>
-            </div>
-
-            <div className="border-b pb-4">
-              <label className="block text-gray-600 text-sm font-semibold mb-1">
-                Email
-              </label>
-              <p className="text-lg text-gray-800">{userInfo.email}</p>
-            </div>
-
+            <InfoField labelName="First Name" labelValue={userInfo.firstName}></InfoField>
+            <InfoField labelName="Last Name" labelValue={userInfo.lastName}></InfoField>
+            <InfoField labelName="Email" labelValue={userInfo.email}></InfoField>
             <div className="border-b pb-4">
               <label className="block text-gray-600 text-sm font-semibold mb-1">
                 Account Type
