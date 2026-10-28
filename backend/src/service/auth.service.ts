@@ -1,7 +1,7 @@
 import * as bcrypt from "bcrypt";
 import {generateToken} from "../utils/jwt.util";
 import {UsersRepository} from "../repository/users.repository";
-import {InvalidCredentialsError, UserAlreadyExistsErrors} from "../utils/HttpErrorHandler.util";
+import {InvalidCredentialsError, UserAlreadyExistsError} from "../utils/HttpErrorHandler.util";
 import {RegisterData} from "../types";
 
 export class AuthService {
@@ -25,7 +25,7 @@ export class AuthService {
 
     async registerUser(email: string, password: string, firstName: string, lastName: string){
         const existingUser = await this.usersRepository.findByEmail(email);
-        if (existingUser) throw new UserAlreadyExistsErrors
+        if (existingUser) throw new UserAlreadyExistsError
         const hashedPassword = await bcrypt.hash(password, 10);
         const data: RegisterData = {
             email: email,
