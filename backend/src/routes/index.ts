@@ -1,21 +1,38 @@
-import { Router } from 'express';
-import { AuthController } from '../controllers/auth.controller';
-import { SessionController } from '../controllers/session.controller';
-import { TeacherController } from '../controllers/teacher.controller';
-import { UserController } from '../controllers/user.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
+import {Router} from 'express';
+import {AuthController} from '../controllers/auth.controller';
+import {SessionController} from '../controllers/session.controller';
+import {TeacherController} from '../controllers/teacher.controller';
+import {UserController} from '../controllers/user.controller';
+import {authMiddleware} from '../middleware/auth.middleware';
+import {validate} from '../middleware/validate.middleware';
+import {LoginSchema, RegisterSchema} from '../dto/auth.dto';
+import {asyncHandler} from "../middleware/asyncHandler";
+import {AuthService} from "../service/auth.service";
+import {UsersRepository} from "../repository/users.repository";
+import {PrismaClient} from "@prisma/client";
+
 
 const router = Router();
 
+// Prisma
+
+const prismaClient = new PrismaClient();
+
+// Repositories
+const usersRepository = new UsersRepository(prismaClient);
+
+// Services
+const authService = new AuthService(usersRepository);
+
 // Controllers
-const authController = new AuthController();
+const authController = new AuthController(authService);
 const sessionController = new SessionController();
 const teacherController = new TeacherController();
 const userController = new UserController();
 
 // Auth routes (public)
-router.post('/api/auth/login', (req, res) => authController.login(req, res));
-router.post('/api/auth/register', (req, res) => authController.register(req, res));
+router.post('/api/auth/login', validate(LoginSchema), asyncHandler((req, res) => authController.login(req, res)));
+router.post('/api/auth/register', validate(RegisterSchema), (req, res) => authController.register(req, res));
 
 // Session routes (protected)
 router.get('/api/session', authMiddleware, (req, res) => sessionController.getAll(req, res));
@@ -27,7 +44,7 @@ router.post('/api/session/:id/participate/:userId', authMiddleware, (req, res) =
 router.delete('/api/session/:id/participate/:userId', authMiddleware, (req, res) => sessionController.unparticipate(req, res));
 
 // Teacher routes (protected)
-router.get('/api/teacher', authMiddleware, (req, res) => teacherController.getAll(req, res));
+router.get('/api/teacher', authMiddleware, (req, res) => teacherController.getAll(res));
 router.get('/api/teacher/:id', authMiddleware, (req, res) => teacherController.getById(req, res));
 
 // User routes (protected)

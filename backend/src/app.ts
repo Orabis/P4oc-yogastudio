@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import routes from './routes';
+import {errorHandler} from "./utils/errorHandler";
 
 dotenv.config();
 
@@ -15,6 +16,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use(routes);
+
+// ErrorHandler
+app.use(errorHandler);
 
 // Health check
 app.get('/api/health', (req, res) => {

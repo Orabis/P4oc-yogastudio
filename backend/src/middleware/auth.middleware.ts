@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/jwt.util';
+import {NextFunction, Request, Response} from 'express';
+import {verifyToken} from '../utils/jwt.util';
 
 export interface AuthRequest extends Request {
   userId?: number;
@@ -27,3 +27,4 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   req.userId = decoded.userId;
   next();
 }
+
