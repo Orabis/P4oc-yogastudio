@@ -85,9 +85,9 @@ function Profile() {
           <h1 className="text-3xl font-bold text-gray-800 mb-8">My Profile</h1>
 
           <div className="space-y-4 mb-8">
-            <InfoField labelName="First Name" labelValue={userInfo.firstName}></InfoField>
-            <InfoField labelName="Last Name" labelValue={userInfo.lastName}></InfoField>
-            <InfoField labelName="Email" labelValue={userInfo.email}></InfoField>
+            <InfoField labelName="First Name" labelValue={userInfo.firstName}/>
+            <InfoField labelName="Last Name" labelValue={userInfo.lastName}/>
+            <InfoField labelName="Email" labelValue={userInfo.email}/>
             <div className="border-b pb-4">
               <label className="block text-gray-600 text-sm font-semibold mb-1">
                 Account Type
@@ -118,19 +118,14 @@ function Profile() {
                 </div>
               ) : null}
             </div>
-
-            <div className="border-b pb-4">
-              <label className="block text-gray-600 text-sm font-semibold mb-1">
-                Member Since
-              </label>
-              <p className="text-lg text-gray-800">
-                {new Date(userInfo.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </p>
-            </div>
+            <InfoField labelName="Member Since" labelValue={
+              new Date(userInfo.createdAt).toLocaleDateString('en-US',
+                  {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  }
+              )}/>
           </div>
 
           <div className="flex space-x-4">

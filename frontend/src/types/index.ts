@@ -33,3 +33,10 @@ export interface AuthResponse {
   admin: boolean;
   token: string;
 }
+
+export interface formDataValues {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}

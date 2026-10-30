@@ -1,27 +1,15 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { authService } from '../services/auth.service';
+import { useState, SubmitEvent } from 'react';
+import { Link } from 'react-router-dom';
+import {useLogin} from "../hooks/useAuth.ts";
 
-function Login() {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState<any>('');
-  const [password, setPassword] = useState<any>('');
-  const [error, setError] = useState<any>('');
-  const [loading, setLoading] = useState<any>(false);
+export default function Login() {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const { mutate: login, isPending, error } = useLogin();
 
-  const handleSubmit = async (e: any): Promise<any> => {
+  const handleSubmit = (e: SubmitEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      await authService.login({ email, password });
-      navigate('/sessions');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
+    login({ email, password });
   };
 
   return (
@@ -33,7 +21,7 @@ function Login() {
 
         {error ? (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+            { "Erreur :" + error }
           </div>
         ) : null}
 
@@ -63,13 +51,12 @@ function Login() {
               required
             />
           </div>
-
           <button
             type="submit"
-            disabled={loading}
+            disabled={isPending}
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
           >
-            {loading ? 'Loading...' : 'Login'}
+            {isPending ? 'Loading...' : 'Login'}
           </button>
         </form>
 
@@ -83,5 +70,3 @@ function Login() {
     </div>
   );
 }
-
-export default Login;

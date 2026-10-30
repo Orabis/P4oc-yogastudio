@@ -1,17 +1,19 @@
 import {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {authService} from '../services/auth.service';
+import {formDataValues} from "../types";
+
 
 function Register() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState <formDataValues>({
     email: '',
     password: '',
     firstName: '',
     lastName: '',
   });
-  const [error, setError] = useState<any>('');
-  const [loading, setLoading] = useState<any>(false);
+  const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleChange = (e: any): any => {
     setFormData({
