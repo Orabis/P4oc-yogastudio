@@ -6,11 +6,16 @@ import {UserController} from '../controllers/user.controller';
 import {authMiddleware} from '../middleware/auth.middleware';
 import {validate} from '../middleware/validate.middleware';
 import {LoginSchema, RegisterSchema} from '../dto/auth.dto';
+import {CreateSessionSchema, UpdateSessionSchema} from '../dto/session.dto';
 import {asyncHandler} from "../middleware/asyncHandler";
 import {AuthService} from "../service/auth.service";
 import {UsersRepository} from "../repository/users.repository";
 import {PrismaClient} from "@prisma/client";
 import {UserService} from "../service/user.service";
+import {SessionsRepository} from "../repository/sessions.repository";
+import {TeachersRepository} from "../repository/teachers.repository";
+import {SessionService} from "../service/session.service";
+import {TeacherService} from "../service/teacher.service";
 import {InvalidUserIdError} from "../utils/HttpErrorHandler.util";
 
 const router = Router();
@@ -20,15 +25,19 @@ const prismaClient = new PrismaClient();
 
 // Repositories
 const usersRepository = new UsersRepository(prismaClient);
+const sessionsRepository = new SessionsRepository(prismaClient);
+const teachersRepository = new TeachersRepository(prismaClient);
 
 // Services
 const authService = new AuthService(usersRepository);
 const userService = new UserService(usersRepository);
+const sessionService = new SessionService(sessionsRepository, teachersRepository, usersRepository);
+const teacherService = new TeacherService(teachersRepository);
 
 // Controllers
 const authController = new AuthController(authService);
-const sessionController = new SessionController();
-const teacherController = new TeacherController();
+const sessionController = new SessionController(sessionService);
+const teacherController = new TeacherController(teacherService);
 const userController = new UserController(userService);
 
 //validate IDs
@@ -50,14 +59,14 @@ router.post('/api/auth/register', validate(RegisterSchema), asyncHandler((req, r
 // Session routes (protected)
 router.get('/api/session', authMiddleware, asyncHandler((req, res) => sessionController.getAll(req, res)));
 router.get('/api/session/:id', authMiddleware, asyncHandler((req, res) => sessionController.getById(req, res)));
-router.post('/api/session', authMiddleware, asyncHandler((req, res) => sessionController.create(req, res)));
-router.put('/api/session/:id', authMiddleware, asyncHandler((req, res) => sessionController.update(req, res)));
+router.post('/api/session', authMiddleware, validate(CreateSessionSchema), asyncHandler((req, res) => sessionController.create(req, res)));
+router.put('/api/session/:id', authMiddleware, validate(UpdateSessionSchema), asyncHandler((req, res) => sessionController.update(req, res)));
 router.delete('/api/session/:id', authMiddleware, asyncHandler((req, res) => sessionController.delete(req, res)));
 router.post('/api/session/:id/participate/:userId', authMiddleware,asyncHandler((req, res) => sessionController.participate(req, res)));
 router.delete('/api/session/:id/participate/:userId', authMiddleware, asyncHandler((req, res) => sessionController.unparticipate(req, res)));
 
 // Teacher routes (protected)
-router.get('/api/teacher', authMiddleware, asyncHandler((req, res) => teacherController.getAll(res)));
+router.get('/api/teacher', authMiddleware, asyncHandler((req, res) => teacherController.getAll(req, res)));
 router.get('/api/teacher/:id', authMiddleware, asyncHandler((req, res) => teacherController.getById(req, res)));
 
 // User routes (protected)

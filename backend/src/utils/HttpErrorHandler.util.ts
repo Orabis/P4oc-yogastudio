@@ -32,3 +32,15 @@ export class InvalidUserIdError extends BadRequestError {
 export class UserNotFoundError extends NotFoundError {
     constructor() { super('User not found'); }
 }
+export class SessionNotFoundError extends NotFoundError {
+    constructor() { super('Session not found'); }
+}
+export class TeacherNotFoundError extends NotFoundError {
+    constructor() { super('Teacher not found'); }
+}
+export class ParticipationNotFoundError extends NotFoundError {
+    constructor() { super('Participation not found'); }
+}
+export class AlreadyParticipatingError extends BadRequestError {
+    constructor() { super('User already participating in this session'); }
+}
