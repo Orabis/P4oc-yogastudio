@@ -1,107 +1,51 @@
-import { useState, useEffect } from 'react';
+import { ChangeEvent, SubmitEvent, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../services/api';
 import { authService } from '../services/auth.service';
-import { Teacher, Session } from '../types';
+import { useSaveSession, useSession } from '../hooks/useSessions.ts';
+import { useTeachers } from '../hooks/useTeachers.ts';
+import { SessionFormData } from '../types';
 
 function SessionForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = !!id;
+  const isAdmin = authService.getCurrentUser()?.admin;
 
-  const [formData, setFormData] = useState<any>({
-    name: '',
-    date: '',
-    description: '',
-    teacherId: '',
-  });
-  const [teachers, setTeachers] = useState<any>([]);
-  const [loading, setLoading] = useState<any>(false);
-  const [error, setError] = useState<any>('');
-  const user = authService.getCurrentUser();
-  const token = authService.getToken();
+  const [edits, setEdits] = useState<Partial<SessionFormData>>({});
+  const { data: teachers = [] } = useTeachers();
+  const { data: session, isError: isSessionError } = useSession(id);
+  const { mutate: saveSession, isPending, error: saveError } = useSaveSession(id);
+
+  const error = saveError
+    ? saveError.response?.data.message ?? 'Failed to save session'
+    : isSessionError && 'Failed to load session';
 
   // Redirect if not admin
   useEffect(() => {
-    if (!user || !user.admin) {
+    if (!isAdmin) {
       navigate('/sessions');
     }
-  }, [user, navigate]);
+  }, [isAdmin, navigate]);
 
-  useEffect(() => {
-    fetchTeachers();
-    if (isEditMode) {
-      fetchSession();
-    }
-  }, [id]);
-
-  const fetchTeachers = async (): Promise<any> => {
-    try {
-      const response = await api.get<Teacher[]>('/teacher', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setTeachers(response.data);
-    } catch (err: any) {
-      console.error('Failed to fetch teachers', err);
-    }
+  const formData: SessionFormData = {
+    name: session?.name ?? '',
+    date: session ? new Date(session.date).toISOString().split('T')[0] : '',
+    description: session?.description ?? '',
+    teacherId: session?.teacher.id ?? 0,
+    ...edits,
   };
 
-  const fetchSession = async (): Promise<any> => {
-    try {
-      const response = await api.get<Session>(`/session/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const session = response.data;
-      setFormData({
-        name: session.name,
-        date: new Date(session.date).toISOString().split('T')[0],
-        description: session.description,
-        teacherId: session.teacher.id,
-      });
-    } catch (err: any) {
-      setError('Failed to load session');
-      console.error(err);
-    }
-  };
-
-  const handleChange = (e: any): any => {
-    const value =
-      e.target.name === 'teacherId' ? parseInt(e.target.value) : e.target.value;
-    setFormData({
-      ...formData,
-      [e.target.name]: value,
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEdits({
+      ...edits,
+      [name]: name === 'teacherId' ? Number(value) : value,
     });
   };
 
-  const handleSubmit = async (e: any): Promise<any> => {
+  const handleSubmit = (e: SubmitEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      if (isEditMode) {
-        await api.put(`/session/${id}`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      } else {
-        await api.post('/session', formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      }
-      navigate('/sessions');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save session');
-    } finally {
-      setLoading(false);
-    }
+    saveSession(formData);
   };
 
   return (
@@ -112,11 +56,11 @@ function SessionForm() {
             {isEditMode ? 'Edit Session' : 'Create New Session'}
           </h1>
 
-          {error ? (
+          {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               {error}
             </div>
-          ) : null}
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
@@ -153,13 +97,13 @@ function SessionForm() {
               </label>
               <select
                 name="teacherId"
-                value={formData.teacherId}
+                value={formData.teacherId || ''}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
                 required
               >
                 <option value="">Select a teacher</option>
-                {teachers.map((teacher: any) => (
+                {teachers.map((teacher) => (
                   <option key={teacher.id} value={teacher.id}>
                     {teacher.firstName} {teacher.lastName}
                   </option>
@@ -184,10 +128,10 @@ function SessionForm() {
             <div className="flex space-x-4">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isPending}
                 className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
               >
-                {loading ? 'Saving...' : isEditMode ? 'Update Session' : 'Create Session'}
+                {isPending ? 'Saving...' : isEditMode ? 'Update Session' : 'Create Session'}
               </button>
               <button
                 type="button"

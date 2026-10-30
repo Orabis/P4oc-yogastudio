@@ -1,40 +1,28 @@
-import {useState} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
-import {authService} from '../services/auth.service';
-import {formDataValues} from "../types";
+import {ChangeEvent, SubmitEvent, useState} from 'react';
+import {Link} from 'react-router-dom';
+import {useRegister} from "../hooks/useAuth.ts";
+import {RegisterData} from "../types";
 
 
 function Register() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState <formDataValues>({
+  const [formData, setFormData] = useState<RegisterData>({
     email: '',
     password: '',
     firstName: '',
     lastName: '',
   });
-  const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+  const { mutate: register, isPending, error } = useRegister();
 
-  const handleChange = (e: any): any => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = async (e: any): Promise<any> => {
+  const handleSubmit = (e: SubmitEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      await authService.register(formData);
-      navigate('/sessions');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
-    } finally {
-      setLoading(false);
-    }
+    register(formData);
   };
 
   return (
@@ -44,11 +32,11 @@ function Register() {
           Register for Yoga Studio
         </h2>
 
-        {error ? (
+        {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+            {error.response?.data.message ?? 'Registration failed'}
           </div>
-        ) : null}
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -110,10 +98,10 @@ function Register() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isPending}
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
           >
-            {loading ? 'Registering...' : 'Register'}
+            {isPending ? 'Registering...' : 'Register'}
           </button>
         </form>
 

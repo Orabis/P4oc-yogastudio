@@ -1,21 +1,41 @@
-import {useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import {useNavigate} from "react-router-dom";
 import api from "../services/api.ts";
-import {AuthResponse} from "../types";
+import {authService} from "../services/auth.service.ts";
+import {User} from "../types";
 
-async function fetchUserInfo(user: AuthResponse, token: string) {
-    const response = await api.get(`/user/${user.id}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return response.data
+const fetchUserInfo = async (userId: number) => (await api.get<User>(`/user/${userId}`)).data;
+
+const promoteAdmin = async () => (await api.post<User>('/user/promote-admin')).data;
+
+export function useFetchUserInfo(userId?: number) {
+    return useQuery({
+        queryKey: ["users", userId],
+        queryFn: () => fetchUserInfo(userId!),
+        staleTime: 1000 * 60 * 2,
+        enabled: userId !== undefined,
+    })
 }
 
-export function useFetchUserInfo(user: AuthResponse | null, token: string | null) {
-    return useQuery({
-        queryKey: ["fetchusers", user?.id],
-        queryFn: ()=> fetchUserInfo(user!, token!),
-        staleTime: 1000 * 60 * 2,
-        enabled: !!user || !!token,
+export function usePromoteAdmin() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: promoteAdmin,
+        onSuccess: (user) => {
+            queryClient.setQueryData(["users", user.id], user);
+            authService.updateCurrentUser({ admin: user.admin });
+        },
+    })
+}
+
+export function useDeleteAccount() {
+    const navigate = useNavigate();
+    return useMutation({
+        mutationFn: (userId: number) => api.delete(`/user/${userId}`),
+        onSuccess: () => {
+            authService.logout();
+            navigate('/login');
+        },
+        onError: () => alert('Failed to delete account'),
     })
 }

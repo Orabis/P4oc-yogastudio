@@ -1,51 +1,42 @@
 import api from './api';
 import {AuthResponse, LoginCredentials, RegisterData} from '../types';
 
-export const authService = {
-  login: async (credentials: LoginCredentials) => {
-    const response = await api.post<AuthResponse>('/auth/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data));
-    }
-    return response.data;
-  },
+const storeAuth = (auth: AuthResponse) => {
+  localStorage.setItem('token', auth.token);
+  localStorage.setItem('user', JSON.stringify(auth));
+  return auth;
+};
 
-  register: async (data: RegisterData) => {
-    const response = await api.post<AuthResponse>('/auth/register', data);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data));
-    }
-    return response.data;
-  },
+const getCurrentUser = (): AuthResponse | null => {
+  const userStr = localStorage.getItem('user');
+  return userStr ? JSON.parse(userStr) : null;
+};
+
+export const authService = {
+  login: async (credentials: LoginCredentials) =>
+    storeAuth((await api.post<AuthResponse>('/auth/login', credentials)).data),
+
+  register: async (data: RegisterData) =>
+    storeAuth((await api.post<AuthResponse>('/auth/register', data)).data),
 
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   },
 
-  getCurrentUser: (): AuthResponse | null => {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
-  },
+  getCurrentUser,
 
-  updateCurrentUser: (updates: Partial<AuthResponse>): AuthResponse | null => {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
+  updateCurrentUser: (updates: Partial<AuthResponse>) => {
+    const existing = getCurrentUser();
+    if (!existing) {
       return null;
     }
-    const existing = JSON.parse(userStr);
     const nextUser = { ...existing, ...updates };
     localStorage.setItem('user', JSON.stringify(nextUser));
     return nextUser;
   },
 
-  getToken: (): string | null => {
-    return localStorage.getItem('token');
-  },
+  getToken: () => localStorage.getItem('token'),
 
-  isAuthenticated: (): boolean => {
-    return !!localStorage.getItem('token');
-  },
+  isAuthenticated: () => !!localStorage.getItem('token'),
 };

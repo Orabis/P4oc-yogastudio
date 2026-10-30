@@ -1,90 +1,18 @@
-import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../services/api';
 import { authService } from '../services/auth.service';
-import { Session } from '../types';
+import { useDeleteSession, useParticipate, useSession, useUnparticipate } from '../hooks/useSessions.ts';
 
 function SessionDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>('');
   const user = authService.getCurrentUser();
-  const token = authService.getToken();
 
-  useEffect(() => {
-    fetchSession();
-  }, [id]);
+  const { data: session, isLoading, isError } = useSession(id);
+  const { mutate: participate } = useParticipate();
+  const { mutate: unparticipate } = useUnparticipate();
+  const { mutate: deleteSession } = useDeleteSession();
 
-  const fetchSession = async (): Promise<any> => {
-    try {
-      setLoading(true);
-      const response = await api.get<Session>(`/session/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSession(response.data);
-    } catch (err: any) {
-      setError('Failed to load session details');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleParticipate = async (): Promise<any> => {
-    try {
-      await api.post(
-        `/session/${id}/participate/${user.id}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      fetchSession();
-    } catch (err: any) {
-      alert('Failed to join session');
-      console.error(err);
-    }
-  };
-
-  const handleUnparticipate = async (): Promise<any> => {
-    try {
-      await api.delete(`/session/${id}/participate/${user.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      fetchSession();
-    } catch (err: any) {
-      alert('Failed to leave session');
-      console.error(err);
-    }
-  };
-
-  const handleDelete = async (): Promise<any> => {
-    if (!window.confirm('Are you sure you want to delete this session?')) {
-      return;
-    }
-
-    try {
-      await api.delete(`/session/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      navigate('/sessions');
-    } catch (err: any) {
-      alert('Failed to delete session');
-      console.error(err);
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-xl text-gray-600">Loading session...</div>
@@ -92,17 +20,24 @@ function SessionDetail() {
     );
   }
 
-  if (error || !session) {
+  if (isError || !session || !user) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error || 'Session not found'}
+          {isError ? 'Failed to load session details' : 'Session not found'}
         </div>
       </div>
     );
   }
 
+  const participation = { sessionId: session.id, userId: user.id };
   const isParticipating = session.users.includes(user.id);
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this session?')) {
+      deleteSession(session.id, { onSuccess: () => navigate('/sessions') });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
@@ -147,7 +82,7 @@ function SessionDetail() {
             {user.admin ? (
               <>
                 <button
-                  onClick={() => navigate(`/sessions/edit/${id}`)}
+                  onClick={() => navigate(`/sessions/edit/${session.id}`)}
                   className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700"
                 >
                   Edit
@@ -159,24 +94,20 @@ function SessionDetail() {
                   Delete
                 </button>
               </>
+            ) : isParticipating ? (
+              <button
+                onClick={() => unparticipate(participation)}
+                className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
+              >
+                Leave Session
+              </button>
             ) : (
-              <>
-                {isParticipating ? (
-                  <button
-                    onClick={handleUnparticipate}
-                    className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
-                  >
-                    Leave Session
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleParticipate}
-                    className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-                  >
-                    Join Session
-                  </button>
-                )}
-              </>
+              <button
+                onClick={() => participate(participation)}
+                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+              >
+                Join Session
+              </button>
             )}
 
             <button

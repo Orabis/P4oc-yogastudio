@@ -1,62 +1,21 @@
-import {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import api from '../services/api';
 import {authService} from '../services/auth.service';
-import {useFetchUserInfo} from "../hooks/useUsers.ts";
-import {useQueryClient} from "@tanstack/react-query";
+import {useDeleteAccount, useFetchUserInfo, usePromoteAdmin} from "../hooks/useUsers.ts";
 import InfoField from "../components/InfoField.tsx";
 
 
 function Profile() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  const [promoteLoading, setPromoteLoading] = useState<boolean>(false);
-  const [promoteError, setPromoteError] = useState<string>('');
   const user = authService.getCurrentUser();
-  const token = authService.getToken();
-  const isDev = import.meta.env?.DEV;
+  const isDev = import.meta.env.DEV;
 
-  const { data: userInfo, isLoading, isError, error } = useFetchUserInfo(user, token)
+  const { data: userInfo, isLoading, isError, error } = useFetchUserInfo(user?.id)
+  const { mutate: promoteAdmin, isPending: promoteLoading, isError: promoteError } = usePromoteAdmin();
+  const { mutate: deleteAccount } = useDeleteAccount();
 
-  const handleDeleteAccount = async ()=> {
-    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      return;
-    }
-    try {
-      await api.delete(`/user/${user?.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      authService.logout();
-      navigate('/login');
-    } catch (err) {
-      alert('Failed to delete account');
-      console.error(err);
-    }
-  };
-
-  const handlePromoteAdmin = async () => {
-    try {
-      setPromoteError('');
-      setPromoteLoading(true);
-      const response = await api.post(
-        '/user/promote-admin',
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-      queryClient.setQueryData(["fetchusers", user?.id], response.data)
-      authService.updateCurrentUser({ admin: response.data.admin });
-    } catch (err) {
-      setPromoteError('Failed to promote to admin');
-      console.error(err);
-    } finally {
-      setPromoteLoading(false);
+  const handleDeleteAccount = () => {
+    if (user && window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      deleteAccount(user.id);
     }
   };
 
@@ -103,20 +62,20 @@ function Profile() {
                   </span>
                 )}
               </p>
-              {isDev && !userInfo.admin ? (
+              {isDev && !userInfo.admin && (
                 <div className="mt-3">
                   <button
-                    onClick={handlePromoteAdmin}
+                    onClick={() => promoteAdmin()}
                     disabled={promoteLoading}
                     className="bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 disabled:opacity-60"
                   >
                     {promoteLoading ? 'Promoting...' : 'Promote to Admin (Dev)'}
                   </button>
-                  {promoteError ? (
-                    <div className="mt-2 text-sm text-red-600">{promoteError}</div>
-                  ) : null}
+                  {promoteError && (
+                    <div className="mt-2 text-sm text-red-600">Failed to promote to admin</div>
+                  )}
                 </div>
-              ) : null}
+              )}
             </div>
             <InfoField labelName="Member Since" labelValue={
               new Date(userInfo.createdAt).toLocaleDateString('en-US',

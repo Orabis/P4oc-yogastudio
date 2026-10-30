@@ -1,11 +1,13 @@
+import {AxiosError} from "axios";
+
 export interface User {
   id: number;
   email: string;
   firstName: string;
   lastName: string;
   admin: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type LoginCredentials = Pick<User, "email"> & { password: string }
@@ -19,24 +21,25 @@ export interface Session {
   description: string;
   teacher: Teacher;
   users: number[];
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type SessionFormData = Pick<Session, "name" | "date" | "description"> & { teacherId: number }
 
-export interface AuthResponse {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  admin: boolean;
-  token: string;
+export type AuthResponse = Omit<User, "createdAt" | "updatedAt"> & { token: string }
+
+export interface ParticipationParams {
+  sessionId: number;
+  userId: number;
 }
 
-export interface formDataValues {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
+export interface ApiError {
+  message: string;
+}
+
+declare module "@tanstack/react-query" {
+  interface Register {
+    defaultError: AxiosError<ApiError>;
+  }
 }
