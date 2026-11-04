@@ -2,8 +2,9 @@ import api from './api';
 import {AuthResponse, LoginCredentials, RegisterData} from '../types';
 
 const storeAuth = (auth: AuthResponse) => {
-  localStorage.setItem('token', auth.token);
-  localStorage.setItem('user', JSON.stringify(auth));
+  const { token, ...rest } = auth;
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(rest));
   return auth;
 };
 
