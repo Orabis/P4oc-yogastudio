@@ -48,3 +48,14 @@ describe('Authentication tests', () => {
         expect(JSON.parse(<string>localStorage.getItem('user'))).toEqual(updated);
     });
 })
+describe('Authentication helpers', () => {
+    test('updateCurrentUser retourne null sans utilisateur', () => {
+        expect(authService.updateCurrentUser({firstName: 'x'})).toBeNull()
+    })
+    test('getToken et isAuthenticated lisent le token', () => {
+        expect(authService.isAuthenticated()).toBe(false)
+        localStorage.setItem('token', 'abc')
+        expect(authService.getToken()).toBe('abc')
+        expect(authService.isAuthenticated()).toBe(true)
+    })
+})
