@@ -31,3 +31,19 @@ export const loginAs = (admin: boolean): AuthResponse => {
     localStorage.setItem('user', JSON.stringify(user))
     return {...user, token: 'fake-token'}
 }
+
+export const mockGet = (routes: Record<string, unknown>) =>
+    (url: string) => url in routes ? Promise.resolve({data: routes[url]}) : Promise.reject(new Error(url))
+
+export const teacher = {id: 1, firstName: 'Margot', lastName: 'Delahaye', createdAt: '', updatedAt: ''}
+
+export const session = {
+    id: 1,
+    name: 'Morning Yoga',
+    date: '2026-03-10T00:00:00.000Z',
+    description: 'Une séance douce',
+    teacher,
+    users: [] as number[],
+    createdAt: '',
+    updatedAt: '',
+}
