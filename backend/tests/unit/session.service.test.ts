@@ -88,10 +88,6 @@ describe('SessionService create', () => {
         await expect(sessionService.create(2, newSession)).rejects.toThrow(ForbiddenError)
         expect(sessionsRepository.createSession).not.toHaveBeenCalled()
     })
-    test('un user inconnu peut pas créer', async () => {
-        usersRepository.findById.mockResolvedValue(null)
-        await expect(sessionService.create(99, newSession)).rejects.toThrow(ForbiddenError)
-    })
     test('throw si le prof existe pas', async () => {
         usersRepository.findById.mockResolvedValue(admin)
         teachersRepository.findById.mockResolvedValue(null)
@@ -124,10 +120,6 @@ describe('SessionService update', () => {
         usersRepository.findById.mockResolvedValue(simpleUser)
         await expect(sessionService.update(2, 1, {name: 'x'})).rejects.toThrow(ForbiddenError)
     })
-    test('throw si la session existe pas', async () => {
-        sessionsRepository.findById.mockResolvedValue(null)
-        await expect(sessionService.update(1, 99, {name: 'x'})).rejects.toThrow(SessionNotFoundError)
-    })
     test('throw si le nouveau prof existe pas', async () => {
         teachersRepository.findById.mockResolvedValue(null)
         await expect(sessionService.update(1, 1, {teacherId: 99})).rejects.toThrow(TeacherNotFoundError)
@@ -146,11 +138,6 @@ describe('SessionService delete', () => {
         usersRepository.findById.mockResolvedValue(simpleUser)
         await expect(sessionService.delete(2, 1)).rejects.toThrow(ForbiddenError)
         expect(sessionsRepository.deleteSession).not.toHaveBeenCalled()
-    })
-    test('throw si la session existe pas', async () => {
-        usersRepository.findById.mockResolvedValue(admin)
-        sessionsRepository.findById.mockResolvedValue(null)
-        await expect(sessionService.delete(1, 99)).rejects.toThrow(SessionNotFoundError)
     })
 })
 

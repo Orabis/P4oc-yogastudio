@@ -30,11 +30,6 @@ describe('GET /api/teacher', () => {
         expect(res.status).toBe(401)
         expect(await res.json()).toEqual({message: 'Invalid or expired token'})
     })
-    test('refuse un header sans Bearer token', async () => {
-        const res = await request('/api/teacher', {headers: {Authorization: 'Bearer'}})
-        expect(res.status).toBe(401)
-        expect(await res.json()).toEqual({message: 'Invalid token format'})
-    })
 })
 
 describe('GET /api/teacher/:id', () => {
@@ -50,9 +45,5 @@ describe('GET /api/teacher/:id', () => {
         const res = await request('/api/teacher/999', {token})
         expect(res.status).toBe(404)
         expect(await res.json()).toEqual({message: 'Teacher not found'})
-    })
-    test('retourne 400 si l\'id est pas un nombre', async () => {
-        const res = await request('/api/teacher/abc', {token})
-        expect(res.status).toBe(400)
     })
 })

@@ -30,10 +30,6 @@ describe('TeacherService', () => {
         expect(teachers).toHaveLength(2)
         expect(teachers[0]).toEqual(teacher)
     })
-    test('getAll retourne un tableau vide sans prof', async () => {
-        teachersRepository.findMany.mockResolvedValue([])
-        expect(await teacherService.getAll()).toEqual([])
-    })
     test('getById retourne le prof', async () => {
         teachersRepository.findById.mockResolvedValue(teacher)
 

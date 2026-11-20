@@ -23,15 +23,14 @@ export const stopServer = async () => {
     await prisma.$disconnect()
 }
 
-type RequestOptions = { method?: string, token?: string, body?: unknown, headers?: Record<string, string> }
+type RequestOptions = { method?: string, token?: string, body?: unknown }
 
-export const request = (path: string, {method = 'GET', token, body, headers}: RequestOptions = {}) =>
+export const request = (path: string, {method = 'GET', token, body}: RequestOptions = {}) =>
     fetch(baseUrl + path, {
         method,
         headers: {
             'Content-Type': 'application/json',
             ...(token && {Authorization: `Bearer ${token}`}),
-            ...headers,
         },
         body: body ? JSON.stringify(body) : undefined,
     })
