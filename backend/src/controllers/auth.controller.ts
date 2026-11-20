@@ -15,7 +15,7 @@ export class AuthController {
     const { email, password, firstName, lastName } = req.body;
 
     const user = await this.authService.registerUser(email, password, firstName, lastName)
-    res.status(200).json({user})
+    res.status(200).json(user)
 
   }
 }

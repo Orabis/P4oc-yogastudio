@@ -1,5 +1,5 @@
 import {Page} from '@playwright/test';
-import {admin, createSession, expect, login, test, uniqueName} from './fixtures';
+import {admin, createSession, expect, login, test, uniqueName, user} from './fixtures';
 
 const fillForm = async (page: Page, name: string, description: string) => {
   await page.locator('input[name=name]').fill(name);
@@ -7,6 +7,12 @@ const fillForm = async (page: Page, name: string, description: string) => {
   await page.locator('select[name=teacherId]').selectOption('1');
   await page.locator('textarea[name=description]').fill(description);
 };
+
+test("un utilisateur non admin est redirigé vers la liste", async ({page}) => {
+  await login(page, user);
+  await page.goto('/sessions/create');
+  await expect(page).toHaveURL('/sessions');
+});
 
 test.describe('Session form', () => {
   test.beforeEach(async ({page}) => {

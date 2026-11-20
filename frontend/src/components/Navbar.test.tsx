@@ -3,8 +3,9 @@ import {fireEvent, render, screen} from '@testing-library/react'
 import {MemoryRouter} from 'react-router-dom'
 import Navbar from "./Navbar.tsx";
 import {loginAs} from "../../tests/utils.tsx";
+import {routerFuture} from "../routerFuture.ts";
 
-const renderNavbar = () => render(<MemoryRouter><Navbar/></MemoryRouter>)
+const renderNavbar = () => render(<MemoryRouter future={routerFuture}><Navbar/></MemoryRouter>)
 
 describe('Navbar', () => {
     test('affiche Login et Register pour un visiteur', () => {

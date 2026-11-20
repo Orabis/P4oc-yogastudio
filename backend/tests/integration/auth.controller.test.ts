@@ -10,11 +10,12 @@ beforeEach(resetDb)
 describe('POST /api/auth/register', () => {
     test('crée le compte et retourne un token', async () => {
         const res = await request('/api/auth/register', {method: 'POST', body: newUser})
-        const {user} = await res.json()
+        const body = await res.json()
 
         expect(res.status).toBe(200)
-        expect(user).toMatchObject({email: 'new@test.com', firstName: 'Jane', admin: false})
-        expect(user.token).toBeDefined()
+        expect(body).toMatchObject({email: 'new@test.com', firstName: 'Jane', admin: false})
+        expect(body.token).toBeDefined()
+        expect(body).not.toHaveProperty('password')
         const saved = await prisma.user.findUnique({where: {email: 'new@test.com'}})
         expect(saved?.password).not.toBe('password123')
     })

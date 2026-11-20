@@ -21,4 +21,13 @@ test.describe('Sessions', () => {
     await page.locator('div.bg-white', {hasText: name}).getByRole('button', {name: 'Delete'}).click();
     await expect(page.getByText(name)).toHaveCount(0);
   });
+
+  test("l'admin annule la suppression", async ({page, request}) => {
+    const name = uniqueName('ListKeep');
+    await createSession(request, name);
+    await login(page, admin);
+    page.on('dialog', (dialog) => dialog.dismiss());
+    await page.locator('div.bg-white', {hasText: name}).getByRole('button', {name: 'Delete'}).click();
+    await expect(page.getByRole('heading', {name})).toBeVisible();
+  });
 });

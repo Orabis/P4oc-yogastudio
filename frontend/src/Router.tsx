@@ -8,6 +8,7 @@ import SessionDetail from "./pages/SessionDetail.tsx";
 import SessionForm from "./pages/SessionForm.tsx";
 import Profile from "./pages/Profile.tsx";
 import {ReactNode} from "react";
+import {routerFuture} from "./routerFuture.ts";
 
 function PrivateRoute  ({ children } : { children:ReactNode }){
     const isAuthenticated = authService.isAuthenticated();
@@ -16,7 +17,7 @@ function PrivateRoute  ({ children } : { children:ReactNode }){
 
 export default function Router (){
     return (
-        <BrowserRouter>
+        <BrowserRouter future={routerFuture}>
             <div className="min-h-screen bg-gray-100">
                 <Navbar />
                 <Routes>

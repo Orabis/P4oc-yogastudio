@@ -7,8 +7,11 @@ export const coverageOptions: CoverageReportOptions = {
   name: 'Yoga Studio E2E Coverage',
   outputDir: './coverage/e2e',
   reports: ['console-summary', 'html', 'lcovonly'],
-  entryFilter: (entry) => entry.url.includes('/src/'),
-  sourceFilter: (sourcePath) => sourcePath.includes('src/') && !sourcePath.includes('main.tsx'),
+  entryFilter: (entry) => {
+    const path = new URL(entry.url).pathname;
+    return /^\/src\/.+\.tsx?$/.test(path) && path !== '/src/main.tsx';
+  },
+  sourcePath: (filePath, info) => info.url?.match(/\/(src\/.+)$/)?.[1] ?? filePath,
   onEnd: (results?: CoverageResults) => {
     const failures = metrics
       .map((metric) => ({metric, pct: Number(results?.summary[metric]?.pct ?? 0)}))

@@ -3,20 +3,21 @@ import {render} from '@testing-library/react'
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
 import {MemoryRouter, Route, Routes} from 'react-router-dom'
 import {AuthResponse} from '../src/types'
+import {routerFuture} from '../src/routerFuture'
 
 export const createClient = () =>
     new QueryClient({defaultOptions: {queries: {retry: false}, mutations: {retry: false}}})
 
 export const wrapper = ({children}: { children: ReactNode }) => (
     <QueryClientProvider client={createClient()}>
-        <MemoryRouter>{children}</MemoryRouter>
+        <MemoryRouter future={routerFuture}>{children}</MemoryRouter>
     </QueryClientProvider>
 )
 
 export const renderPage = (ui: ReactNode, {route = '/', path = '/'} = {}) =>
     render(
         <QueryClientProvider client={createClient()}>
-            <MemoryRouter initialEntries={[route]}>
+            <MemoryRouter initialEntries={[route]} future={routerFuture}>
                 <Routes>
                     <Route path={path} element={ui}/>
                     <Route path="*" element={<div>redirected</div>}/>

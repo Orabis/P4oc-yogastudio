@@ -28,5 +28,17 @@ services:
     tmpfs:
       - /var/lib/postgresql/data
 
+  postgres-e2e:
+    image: postgres:16-alpine
+    container_name: yoga-studio-db-e2e
+    environment:
+      POSTGRES_USER: yogauser
+      POSTGRES_PASSWORD: yogapass
+      POSTGRES_DB: yogastudio_e2e
+    ports:
+      - "5447:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
 volumes:
   postgres_data:
